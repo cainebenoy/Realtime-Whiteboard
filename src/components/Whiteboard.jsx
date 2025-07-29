@@ -4,19 +4,7 @@ import Toolbar from './Toolbar';
 import './Whiteboard.css';
 
 const Whiteboard = () => {
-  const  // Update brush settings
-  useEffect(() => {
-    if (contextRef.current) {
-      if (currentTool === 'eraser') {
-        contextRef.current.globalCompositeOperation = 'destination-out';
-        contextRef.current.lineWidth = brushSize;
-      } else {
-        contextRef.current.globalCompositeOperation = 'source-over';
-        contextRef.current.strokeStyle = brushColor;
-        contextRef.current.lineWidth = brushSize;
-      }
-    }
-  }, [brushColor, brushSize, currentTool]); // Added missing dependenciesuseRef(null);
+  const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const socketRef = useRef(null);
   const textareaRef = useRef(null);
