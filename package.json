@@ -2,15 +2,15 @@
   "name": "realtime-whiteboard",
   "version": "1.0.0",
   "description": "A professional real-time collaborative whiteboard application built with React and Socket.IO",
-  "author": "Your Name <your.email@example.com>",
+  "author": "Caine Benoy",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/realtime-whiteboard.git"
+    "url": "https://github.com/cainebenoy/Realtime-Whiteboard.git"
   },
-  "homepage": "https://github.com/yourusername/realtime-whiteboard#readme",
+  "homepage": "https://cainebenoy.github.io/Realtime-Whiteboard",
   "bugs": {
-    "url": "https://github.com/yourusername/realtime-whiteboard/issues"
+    "url": "https://github.com/cainebenoy/Realtime-Whiteboard/issues"
   },
   "keywords": [
     "whiteboard",
@@ -38,7 +38,9 @@
     "dev": "concurrently \"npm run server\" \"npm start\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -59,6 +61,7 @@
     ]
   },
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "gh-pages": "^6.3.0"
   }
 }

@@ -9,7 +9,9 @@ const Toolbar = ({
   isEraser,
   setIsEraser,
   onClear, 
-  onUndo 
+  onUndo,
+  isConnected = false,
+  isDemoMode = false
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   
@@ -26,8 +28,8 @@ const Toolbar = ({
       <div className="toolbar-brand">
         <h1 className="app-title">✏️ Realtime Whiteboard</h1>
         <div className="connection-status">
-          <div className="status-indicator online"></div>
-          <span>Connected</span>
+          <div className={`status-indicator ${isConnected ? 'online' : isDemoMode ? 'demo' : 'offline'}`}></div>
+          <span>{isConnected ? 'Connected' : isDemoMode ? 'Demo Mode' : 'Connecting...'}</span>
         </div>
       </div>
       

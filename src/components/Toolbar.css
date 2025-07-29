@@ -50,6 +50,21 @@
   animation: pulse 2s infinite;
 }
 
+.status-indicator.online {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+}
+
+.status-indicator.demo {
+  background: #ffa500;
+  box-shadow: 0 0 8px rgba(255, 165, 0, 0.6);
+}
+
+.status-indicator.offline {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }

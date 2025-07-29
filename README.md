@@ -2,6 +2,12 @@
 
 A professional, real-time collaborative whiteboard application built with React and Socket.IO. Draw, collaborate, and share ideas instantly with multiple users in real-time.
 
+## 🌐 Live Demo
+
+**🚀 [Try the Live Demo](https://cainebenoy.github.io/Realtime-Whiteboard/)**
+
+> **Note**: The live demo runs the frontend only. For full real-time collaboration features, you'll need to run the backend server locally as described in the installation section.
+
 ![Realtime Whiteboard Preview](https://via.placeholder.com/800x400/667eea/ffffff?text=Realtime+Whiteboard+Preview)
 
 ## 🚀 Features
@@ -56,8 +62,8 @@ A professional, real-time collaborative whiteboard application built with React 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/realtime-whiteboard.git
-   cd realtime-whiteboard
+   git clone https://github.com/cainebenoy/Realtime-Whiteboard.git
+   cd Realtime-Whiteboard
    ```
 
 2. **Install dependencies**
@@ -186,12 +192,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check the [Issues](https://github.com/yourusername/realtime-whiteboard/issues) section
+1. Check the [Issues](https://github.com/cainebenoy/Realtime-Whiteboard/issues) section
 2. Create a new issue with detailed description
 3. Include browser version and error messages
 
 ---
 
-**Made with ❤️ by [Your Name]**
+**Made with ❤️ by Caine Benoy**
 
 *Star ⭐ this repository if you found it helpful!*

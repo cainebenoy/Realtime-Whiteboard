@@ -12,6 +12,8 @@ const Whiteboard = () => {
   const [brushColor, setBrushColor] = useState('#000000');
   const [isEraser, setIsEraser] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+  const [isConnected, setIsConnected] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Draw from remote user data
   const drawFromRemote = useCallback((data) => {
@@ -50,14 +52,27 @@ const Whiteboard = () => {
 
   // Socket.IO connection and event listeners
   useEffect(() => {
-    socketRef.current = io('http://localhost:3001');
+    // Try to connect to local server for development, fallback to demo mode
+    const serverUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://your-deployed-server.herokuapp.com' // You can deploy the server later
+      : 'http://localhost:3001';
+    
+    socketRef.current = io(serverUrl, {
+      timeout: 5000,
+      forceNew: true
+    });
     
     socketRef.current.on('connect', () => {
-      console.log('Connected to server');
+      console.log('Connected to server at:', serverUrl);
+      setIsConnected(true);
+      setIsDemoMode(false);
     });
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('Connection error:', error);
+      console.warn('Connection error - running in demo mode:', error.message);
+      setIsConnected(false);
+      setIsDemoMode(true);
+      // In demo mode, we'll just allow local drawing without real-time sync
     });
 
     // Listen for drawing events from other users
@@ -260,6 +275,19 @@ const Whiteboard = () => {
 
   return (
     <div className="whiteboard-container">
+      {isDemoMode && (
+        <div className="demo-banner">
+          <div className="demo-content">
+            <span className="demo-icon">ℹ️</span>
+            <span className="demo-text">
+              <strong>Demo Mode:</strong> Real-time collaboration requires running the backend server locally. 
+              <a href="https://github.com/cainebenoy/Realtime-Whiteboard#installation" target="_blank" rel="noopener noreferrer"> 
+                See installation guide
+              </a>
+            </span>
+          </div>
+        </div>
+      )}
       <Toolbar 
         brushSize={brushSize}
         setBrushSize={setBrushSize}
@@ -269,6 +297,8 @@ const Whiteboard = () => {
         setIsEraser={setIsEraser}
         onClear={clearCanvas}
         onUndo={handleUndo}
+        isConnected={isConnected}
+        isDemoMode={isDemoMode}
       />
       <canvas
         ref={canvasRef}
