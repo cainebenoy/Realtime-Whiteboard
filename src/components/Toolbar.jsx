@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Toolbar.css';
 
 const Toolbar = ({ 
@@ -14,6 +14,21 @@ const Toolbar = ({
   isDemoMode = false
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const colorPickerRef = useRef(null);
+  
+  // Close color picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(event.target)) {
+        setShowColorPicker(false);
+      }
+    };
+
+    if (showColorPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showColorPicker]);
   
   const colors = [
     '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', 
@@ -95,7 +110,7 @@ const Toolbar = ({
         
         <div className="toolbar-section">
           <label className="section-label">Colors</label>
-          <div className="color-section">
+          <div className="color-section" ref={colorPickerRef}>
             <div className="current-color" onClick={() => setShowColorPicker(!showColorPicker)}>
               <div 
                 className="color-preview" 
@@ -103,7 +118,7 @@ const Toolbar = ({
                 title="Current Color"
               ></div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 10l5 5 5-5H7z"/>
+                <path d={showColorPicker ? "M7 14l5-5 5 5H7z" : "M7 10l5 5 5-5H7z"}/>
               </svg>
             </div>
             
@@ -136,7 +151,7 @@ const Toolbar = ({
                     className="color-input"
                     disabled={isEraser}
                   />
-                  <label>Custom</label>
+                  <label>Custom Color</label>
                 </div>
               </div>
             )}

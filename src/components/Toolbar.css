@@ -13,6 +13,7 @@
   min-height: 80px;
   flex-wrap: wrap;
   gap: 20px;
+  z-index: 1000; /* Ensure toolbar is above canvas */
 }
 
 .toolbar-brand {
@@ -205,6 +206,7 @@
 /* Color Section */
 .color-section {
   position: relative;
+  z-index: 100; /* Ensure the section itself has proper stacking */
 }
 
 .current-color {
@@ -240,12 +242,15 @@
   background: white;
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 9999; /* Much higher z-index to appear above everything */
   min-width: 280px;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   margin-top: 8px;
+  /* Ensure it's positioned correctly */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .color-grid {
@@ -392,4 +397,26 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Disabled State Improvements */
+.color-option:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.color-option:disabled:hover {
+  transform: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.color-input:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.current-color:has(input:disabled) {
+  opacity: 0.6;
+  pointer-events: none;
 }
