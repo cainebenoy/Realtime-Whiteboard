@@ -205,7 +205,7 @@ const Whiteboard = () => {
     // Handle window resize
     window.addEventListener('resize', resizeCanvas);
     return () => window.removeEventListener('resize', resizeCanvas);
-  }, []); // Remove dependencies to prevent clearing on state changes
+  }, [brushColor, brushSize]); // Include dependencies for initial brush settings
 
   // Update brush settings
   useEffect(() => {
