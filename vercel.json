@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "realtime-whiteboard",
   "builds": [
     {
       "src": "package.json",
@@ -8,6 +7,10 @@
       "config": {
         "distDir": "build"
       }
+    },
+    {
+      "src": "api/socket.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -30,10 +33,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/socket.js": {
-      "maxDuration": 10
-    }
   }
 }

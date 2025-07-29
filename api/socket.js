@@ -1,10 +1,10 @@
-import { Server } from 'socket.io';
+const { Server } = require('socket.io');
 
 let io;
 let drawingHistory = [];
 const MAX_HISTORY_SIZE = 10000;
 
-export default function handler(req, res) {
+module.exports = (req, res) => {
   if (!io) {
     console.log('Initializing Socket.IO server...');
     
@@ -63,4 +63,4 @@ export default function handler(req, res) {
   }
 
   res.end();
-}
+};
