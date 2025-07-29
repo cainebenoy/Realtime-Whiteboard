@@ -7,19 +7,25 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
+// Environment configuration
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const allowedOrigins = isDevelopment 
+  ? ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
+  : [process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://realtime-whiteboard-tau.vercel.app"];
+
 // Serve static files from the build directory
 app.use(express.static(path.join(__dirname, 'build')));
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: allowedOrigins,
   methods: ["GET", "POST"],
   credentials: true
 }));
 
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -101,8 +107,17 @@ io.on('connection', (socket) => {
   });
 });
 
-// Serve the React app for the root route
-app.get('/', (req, res) => {
+// API health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Serve the React app for all routes
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 

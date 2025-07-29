@@ -84,18 +84,24 @@ const Whiteboard = () => {
 
   // Socket.IO connection and event listeners
   useEffect(() => {
-    // Try to connect to local server for development, fallback to demo mode
+    // Connect to the appropriate endpoint based on environment
     const serverUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://your-deployed-server.herokuapp.com' // You can deploy the server later
+      ? window.location.origin // Same domain in production
       : 'http://localhost:3001';
     
+    const socketPath = process.env.NODE_ENV === 'production' 
+      ? '/api/socket' // Vercel serverless function path
+      : '/socket.io'; // Standard Socket.IO path for development
+    
     socketRef.current = io(serverUrl, {
+      path: socketPath,
       timeout: 5000,
-      forceNew: true
+      forceNew: true,
+      transports: ['websocket', 'polling'] // Ensure compatibility
     });
     
     socketRef.current.on('connect', () => {
-      console.log('Connected to server at:', serverUrl);
+      console.log('Connected to server at:', serverUrl, 'with path:', socketPath);
       setIsConnected(true);
       setIsDemoMode(false);
     });
