@@ -7,18 +7,50 @@ const Whiteboard = () => {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const socketRef = useRef(null);
+  const textareaRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushSize, setBrushSize] = useState(5);
   const [brushColor, setBrushColor] = useState('#000000');
-  const [isEraser, setIsEraser] = useState(false);
+  const [currentTool, setCurrentTool] = useState('brush');
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
   const [isConnected, setIsConnected] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
+  const [textInput, setTextInput] = useState({ isActive: false, x: 0, y: 0, text: '' });
 
   // Draw from remote user data
   const drawFromRemote = useCallback((data) => {
     const context = contextRef.current;
     if (!context) return;
+
+    if (data.type === 'text') {
+      // Handle text drawing
+      const currentFont = context.font;
+      const currentFillStyle = context.fillStyle;
+      const currentTextAlign = context.textAlign;
+      const currentTextBaseline = context.textBaseline;
+
+      context.font = `${data.size}px 'Roboto', Arial, sans-serif`;
+      context.fillStyle = data.color;
+      context.textAlign = 'left';
+      context.textBaseline = 'top';
+      
+      // Handle multi-line text
+      const lines = data.text.split('\n');
+      const lineHeight = data.size * 1.2; // 20% line spacing
+      
+      lines.forEach((line, index) => {
+        if (line.trim()) { // Only draw non-empty lines
+          context.fillText(line, data.x, data.y + (index * lineHeight));
+        }
+      });
+
+      // Restore original text style
+      context.font = currentFont;
+      context.fillStyle = currentFillStyle;
+      context.textAlign = currentTextAlign;
+      context.textBaseline = currentTextBaseline;
+      return;
+    }
 
     // Save current drawing style
     const currentColor = context.strokeStyle;
@@ -172,7 +204,7 @@ const Whiteboard = () => {
   // Update brush settings
   useEffect(() => {
     if (contextRef.current) {
-      if (isEraser) {
+      if (currentTool === 'eraser') {
         contextRef.current.globalCompositeOperation = 'destination-out';
         contextRef.current.lineWidth = brushSize;
       } else {
@@ -181,7 +213,7 @@ const Whiteboard = () => {
         contextRef.current.lineWidth = brushSize;
       }
     }
-  }, [brushColor, brushSize, isEraser]);
+  }, [brushColor, brushSize, currentTool]);
 
   // Get mouse position
   const getMousePos = useCallback((e) => {
@@ -199,13 +231,29 @@ const Whiteboard = () => {
   // Start drawing
   const startDrawing = useCallback((e) => {
     const pos = getMousePos(e);
+    
+    // Handle text tool
+    if (currentTool === 'text') {
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      setTextInput({ 
+        isActive: true, 
+        x: e.clientX, // Use screen coordinates for input positioning
+        y: e.clientY, 
+        canvasX: pos.x, // Store canvas coordinates for text drawing
+        canvasY: pos.y,
+        text: '' 
+      });
+      return;
+    }
+    
     setIsDrawing(true);
     setLastPos(pos);
     
     const context = contextRef.current;
     
     // Set appropriate drawing mode
-    if (isEraser) {
+    if (currentTool === 'eraser') {
       context.globalCompositeOperation = 'destination-out';
       context.lineWidth = brushSize;
     } else {
@@ -216,7 +264,7 @@ const Whiteboard = () => {
     
     context.beginPath();
     context.moveTo(pos.x, pos.y);
-  }, [getMousePos, isEraser, brushSize, brushColor]);
+  }, [getMousePos, currentTool, brushSize, brushColor]);
 
   // Draw
   const draw = useCallback((e) => {
@@ -238,12 +286,12 @@ const Whiteboard = () => {
         currentY: pos.y,
         color: brushColor,
         size: brushSize,
-        isEraser: isEraser
+        isEraser: currentTool === 'eraser'
       });
     }
 
     setLastPos(pos);
-  }, [isDrawing, lastPos, brushColor, brushSize, isEraser, getMousePos]);
+  }, [isDrawing, lastPos, brushColor, brushSize, currentTool, getMousePos]);
 
   // Stop drawing
   const stopDrawing = useCallback(() => {
@@ -252,6 +300,93 @@ const Whiteboard = () => {
       contextRef.current.closePath();
     }
   }, [isDrawing]);
+
+  // Handle text input submission
+  const handleTextSubmit = useCallback(() => {
+    if (textInput.text.trim() === '') {
+      setTextInput({ isActive: false, x: 0, y: 0, canvasX: 0, canvasY: 0, text: '' });
+      return;
+    }
+
+    const context = contextRef.current;
+    if (!context) return;
+
+    // Use stored canvas coordinates
+    const canvasX = textInput.canvasX;
+    const canvasY = textInput.canvasY;
+
+    // Handle multi-line text
+    const lines = textInput.text.split('\n');
+    const lineHeight = brushSize * 1.2; // 20% line spacing
+
+    // Draw text locally
+    context.font = `${brushSize}px 'Roboto', Arial, sans-serif`;
+    context.fillStyle = brushColor;
+    context.textAlign = 'left';
+    context.textBaseline = 'top';
+    
+    lines.forEach((line, index) => {
+      if (line.trim()) { // Only draw non-empty lines
+        context.fillText(line, canvasX, canvasY + (index * lineHeight));
+      }
+    });
+
+    // Emit to other users
+    if (socketRef.current) {
+      socketRef.current.emit('drawing', {
+        type: 'text',
+        text: textInput.text,
+        x: canvasX,
+        y: canvasY,
+        color: brushColor,
+        size: brushSize
+      });
+    }
+
+    // Clear text input
+    setTextInput({ isActive: false, x: 0, y: 0, canvasX: 0, canvasY: 0, text: '' });
+  }, [textInput, brushColor, brushSize]);
+
+  // Handle text input cancellation
+  const handleTextCancel = useCallback(() => {
+    setTextInput({ isActive: false, x: 0, y: 0, text: '' });
+  }, []);
+
+  // Handle text input change
+  const handleTextChange = useCallback((e) => {
+    setTextInput(prev => ({ ...prev, text: e.target.value }));
+    
+    // Auto-resize textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.max(textarea.scrollHeight, brushSize * 1.5) + 'px';
+  }, [brushSize]);
+
+  // Handle text input key press
+  const handleTextKeyPress = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent default form submission
+      handleTextSubmit();
+    } else if (e.key === 'Enter' && e.shiftKey) {
+      // Allow Shift+Enter for new lines - don't prevent default
+      return;
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleTextCancel();
+    }
+  }, [handleTextSubmit, handleTextCancel]);
+
+  // Auto-focus text input when it becomes active
+  useEffect(() => {
+    if (textInput.isActive && textareaRef.current) {
+      setTimeout(() => {
+        textareaRef.current.focus();
+        // Auto-size the textarea
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = Math.max(textareaRef.current.scrollHeight, brushSize * 1.5) + 'px';
+      }, 10);
+    }
+  }, [textInput.isActive, brushSize]);
 
   // Clear canvas
   const clearCanvas = useCallback(() => {
@@ -293,8 +428,8 @@ const Whiteboard = () => {
         setBrushSize={setBrushSize}
         brushColor={brushColor}
         setBrushColor={setBrushColor}
-        isEraser={isEraser}
-        setIsEraser={setIsEraser}
+        currentTool={currentTool}
+        setCurrentTool={setCurrentTool}
         onClear={clearCanvas}
         onUndo={handleUndo}
         isConnected={isConnected}
@@ -307,8 +442,53 @@ const Whiteboard = () => {
         onMouseMove={draw}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
-        style={{ cursor: isEraser ? 'url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSIvPgo8L3N2Zz4K) 10 10, auto' : 'crosshair' }}
+        style={{ 
+          cursor: currentTool === 'eraser' 
+            ? 'url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMSIvPgo8L3N2Zz4K) 10 10, auto' 
+            : currentTool === 'text' 
+            ? 'text' 
+            : 'crosshair' 
+        }}
       />
+      
+      {/* Text Input */}
+      {textInput.isActive && (
+        <div
+          className="text-input-container"
+          style={{
+            position: 'absolute',
+            left: `${textInput.x}px`,
+            top: `${textInput.y}px`,
+            zIndex: 1000,
+            pointerEvents: 'none'
+          }}
+        >
+          <textarea
+            ref={textareaRef}
+            className="text-input"
+            value={textInput.text}
+            onChange={handleTextChange}
+            onKeyDown={handleTextKeyPress}
+            onBlur={handleTextSubmit}
+            style={{
+              fontSize: `${brushSize}px`,
+              color: brushColor,
+              border: '2px solid #3b82f6',
+              backgroundColor: 'white',
+              padding: '4px 8px',
+              minWidth: '150px',
+              minHeight: `${brushSize * 1.5}px`,
+              resize: 'both',
+              pointerEvents: 'auto',
+              fontFamily: "'Roboto', Arial, sans-serif",
+              lineHeight: '1.2',
+              overflow: 'hidden'
+            }}
+            placeholder="Type text... (Shift+Enter for new line, Enter to submit, Esc to cancel)"
+            rows={1}
+          />
+        </div>
+      )}
     </div>
   );
 };
