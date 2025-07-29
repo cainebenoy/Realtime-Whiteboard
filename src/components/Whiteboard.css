@@ -1,0 +1,116 @@
+.whiteboard-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.whiteboard-canvas {
+  background: #ffffff;
+  cursor: crosshair;
+  display: block;
+  flex: 1;
+  border: none;
+  margin: 8px;
+  padding: 0;
+  outline: none;
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.1),
+    0 1px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.whiteboard-canvas:hover {
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+.whiteboard-canvas:active {
+  cursor: crosshair;
+  transform: translateY(0);
+}
+
+/* Canvas Loading State */
+.whiteboard-canvas::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Paper texture effect */
+.whiteboard-canvas::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(0,0,0,0.08) 1px, transparent 0);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.3;
+  border-radius: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .whiteboard-canvas {
+    margin: 4px;
+    border-radius: 8px;
+  }
+}
+
+/* Focus and accessibility */
+.whiteboard-canvas:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .whiteboard-container {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
+  
+  .whiteboard-canvas {
+    background: #2d3748;
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.3),
+      0 1px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .whiteboard-canvas:hover {
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.4),
+      0 4px 16px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
